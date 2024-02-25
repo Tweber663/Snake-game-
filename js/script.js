@@ -22,7 +22,7 @@ class snakeGame {
 
         thisElement.gameInterval;
         //Game speed
-        thisElement.gameSpeedDelay = 350;
+        thisElement.gameSpeedDelay = 300;
         console.log(thisElement.gameSpeedDelay)
         //game on / off
         thisElement.gameStarted = false;
@@ -53,8 +53,8 @@ class snakeGame {
 
         thisElement.gameInterval = setInterval(() => {
             thisElement.move();
-            // thisElement.checkCollision();
             thisElement.draw();
+            thisElement.checkCollision();
         }, thisElement.gameSpeedDelay)
     }
 
@@ -143,17 +143,60 @@ class snakeGame {
                 thisElement.generateFood();  // if head + food collides generate food in new location
                 
                 /*Updating game speeing when head colides with food */
-                thisElement.gameSpeedDelay -= 10;               // Update game speed
+                thisElement.InsreaseSpeed();                    // Update game speed
                 clearInterval(thisElement.gameInterval);        // Clearing existing game loop interval in 'startGame' function
                 thisElement.gameInterval = setInterval(() => {  //Starting new loop with updated game speed
                     thisElement.move();                        
                     thisElement.draw();
+                    thisElement.checkCollision();
                 }, thisElement.gameSpeedDelay);
         } else {
             this.snake.pop();  // Removes last coordiantes  from 'snake' object
         }
-
     }
+    
+    //Insreasing game speed
+    InsreaseSpeed() {
+        const thisElement =  this; 
+          //Increasing game speed by 5ms every time food is eaten up to 150ms
+        if (thisElement.gameSpeedDelay >= 150) {
+            thisElement.gameSpeedDelay -= 5;
+            console.log(thisElement.gameSpeedDelay)
+            //Once game speed drops below 150 we start decreasing game speed only by 2ms
+        } else if (thisElement.gameSpeedDelay >= 100 ) {
+            thisElement.gameSpeedDelay -= 2;
+            console.log(thisElement.gameSpeedDelay)
+        }
+    }
+
+    //Checking for colision
+    checkCollision() {
+        const thisElement = this;
+        const head = thisElement.snake[0];
+        
+        //Checking wall collison
+        if (head.x < 1 || head.x > thisElement.gridSize || head.y < 1 || head.y > thisElement.gridSize) {
+            console.log('wall colision');
+            thisElement.resetGame();
+        } 
+
+        //Checking snake collison expect for the first head position
+        for (let i = 1; i < thisElement.snake.length; i++) {
+            if (head.x === thisElement.snake[i].x && head.y === thisElement.snake[i].y) {
+                console.log('snake colision');
+                thisElement.resetGame();  
+            }
+        }
+    }
+
+    resetGame() { 
+        const thisElement = this;
+        thisElement.snake = [{x: 10, y:10}]; //reset positon
+        thisElement.generateFood();          //reset food location
+        thisElement.direction = 'right';     //reset inital snake direction
+        thisElement.gameSpeedDelay = 300     //reset game speed
+    }
+    
 
     //[Draw food] 🍖
     drawFood() {
