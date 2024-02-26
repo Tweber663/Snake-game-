@@ -79,12 +79,15 @@ body,.snake {
 
 .snake {
     border: #c4cfa3 3px solid;
+}
 
+.snakeEat {
+    background-color: #868686;
 }
 
 .food {
     background-color: #dedede;
-    border: #999 5px solid;
+    border: #858585 5px solid;
 }
 
 #logo {

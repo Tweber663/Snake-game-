@@ -9,8 +9,13 @@ class snakeGame {
         thisElement.instructionText = document.getElementById('instruction-text');
         //Logo 
         thisElement.logo = document.getElementById('logo');
+        //Score
+        thisElement.score = document.getElementById('score');
+        //High score
+        thisElement.highScore = document.getElementById('highScore');
        
-        /* Define game variables*/
+        //Tracking food locations
+        thisElement.foodTrack = [];
         // Starting position of a snake
         thisElement.snake = [{x: 10, y: 10}]; 
         //Grid size
@@ -20,6 +25,8 @@ class snakeGame {
         //Starting snake postion
         thisElement.direction = 'right';
 
+        thisElement.counter = 0;
+
         thisElement.gameInterval;
         //Game speed
         thisElement.gameSpeedDelay = 300;
@@ -27,9 +34,11 @@ class snakeGame {
         //game on / off
         thisElement.gameStarted = false;
 
+        thisElement.eatAnimation();
+
         //~ Listens for keypreses and sends the data to the fuinction -> 
         document.addEventListener('keydown', document.addEventListener('keydown', (event) => thisElement.handleKeypress(event)));
-        
+    
     }
 
     // Drawing game map, snake + food
@@ -48,12 +57,14 @@ class snakeGame {
         const thisElement = this;
 
         thisElement.gameStarted = true; // Keep track of a running game
+        console.log(thisElement.gameStarted);
         thisElement.instructionText.style.display = 'none';  //Removes the instruction text
         thisElement.logo.style.display = 'none';  //Removes the logo
 
         thisElement.gameInterval = setInterval(() => {
             thisElement.move();
             thisElement.draw();
+            thisElement.updateScore();
             thisElement.checkCollision();
         }, thisElement.gameSpeedDelay)
     }
@@ -139,22 +150,41 @@ class snakeGame {
 
         // Check for snake and food colision
         // Check newly created 'head' coordinates & 'food' cooridnates
-        if (head.x === thisElement.food.x && head.y === thisElement.food.y) {    
+        if (head.x === thisElement.food.x && head.y === thisElement.food.y) {  
+                thisElement.counter = 0;     //restarting food counter
                 thisElement.generateFood();  // if head + food collides generate food in new location
-                
                 /*Updating game speeing when head colides with food */
                 thisElement.InsreaseSpeed();                    // Update game speed
                 clearInterval(thisElement.gameInterval);        // Clearing existing game loop interval in 'startGame' function
                 thisElement.gameInterval = setInterval(() => {  //Starting new loop with updated game speed
                     thisElement.move();                        
-                    thisElement.draw();
+                    thisElement.draw()
                     thisElement.checkCollision();
+                    thisElement.updateScore();
+                    thisElement.eatAnimation();  //Eat Animation get's activated
+                    thisElement.counter++ ;      //counts num of moves after eating food. 
                 }, thisElement.gameSpeedDelay);
         } else {
             this.snake.pop();  // Removes last coordiantes  from 'snake' object
         }
     }
-    
+
+    eatAnimation() {
+        const thisElement = this;
+        // 
+        if (thisElement.foodTrack[1] && thisElement.counter < thisElement.snake.length) {
+            let foodLocation = thisElement.foodTrack[1];
+            console.log(this.foodTrack);
+            let element = document.createElement('div');
+            element.classList.add('snakeEat');
+            element.style.gridColumn = foodLocation.x; //Horizontal x <->
+            element.style.gridRow = foodLocation.y;    //Vertical y ↕
+            thisElement.board.appendChild(element);
+          }
+
+        }
+
+
     //Insreasing game speed
     InsreaseSpeed() {
         const thisElement =  this; 
@@ -191,19 +221,47 @@ class snakeGame {
 
     resetGame() { 
         const thisElement = this;
+        thisElement.gameStarted = false;     // game running no longer true
         thisElement.snake = [{x: 10, y:10}]; //reset positon
-        thisElement.generateFood();          //reset food location
         thisElement.direction = 'right';     //reset inital snake direction
         thisElement.gameSpeedDelay = 300     //reset game speed
+        clearInterval(thisElement.gameInterval); //Clearing the game interval 
+        thisElement.stopGame()
+
+        Array.from(thisElement.board.children).forEach((child) => { //Removes all the elements from the board
+            child.remove();
+         });  
     }
-    
+
+    stopGame() {
+        const thisElement = this;
+        thisElement.instructionText.style.display = 'block'; // Game text visible
+        thisElement.logo.style.display = 'block';           //Logo visible   
+    }
+
+
+    updateScore() {
+        const thisElement = this;
+        thisElement.currentScore = thisElement.snake.length - 1;
+        thisElement.score.innerHTML = thisElement.currentScore.toString().padStart(3, 0);
+        thisElement.updateHighScore();
+    }
+
+    updateHighScore() {
+        const thisElement = this; 
+        if (thisElement.currentScore >= 1) {
+            thisElement.highScore.style.display = 'block';
+            thisElement.highScore.innerHTML = thisElement.currentScore.toString().padStart(3, 0);
+        }
+    }
+
 
     //[Draw food] 🍖
     drawFood() {
         const thisElement = this;
+     
         const foodElement = thisElement.createGameElement('div', 'food'); //?-> Callback reating food 🟢
         this.setPosition(foodElement, thisElement.food);
-        console.log(thisElement.food);
         thisElement.board.appendChild(foodElement);
     }
 
@@ -215,8 +273,9 @@ class snakeGame {
         let x = Math.floor(Math.random() * thisElement.gridSize) + 1;
         let y = Math.floor(Math.random() * thisElement.gridSize) + 1;
         thisElement.food = {x, y} 
+        thisElement.foodTrack.unshift(thisElement.food);
         return {x, y}
-    }
+    } 
 }
 
 const newGame = new snakeGame();
